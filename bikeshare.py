@@ -7,9 +7,9 @@ CITY_DATA = { 'chicago': 'chicago.csv',
               'washington': 'washington.csv' }
 
 # Global Variables
-selected_month = ""
-selected_city = ""
-selected_day = ""
+selected_month = "".lower()
+selected_city = "".lower()
+selected_day = "".lower()
 
 def get_filters():
     """
@@ -92,7 +92,7 @@ def load_data(city, month, day):
             
 
         if day != 'all': # filter by day of week if applicable
-            days = ['monday','tuesday','wednesday','Thursday','friday','saturday','sunday']
+            days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
             day = days.index(day)
             df = df[df['day_of_week'] == day] # filter by day of week to create the new dataframe
 
@@ -224,8 +224,49 @@ def user_stats(df):
     print("\nThis took %s seconds." % (time.time() - start_time))
     print('-'*40)
 
+def view_raw(df):
+    """Displays option to view 5 rows of Raw Data"""
+    start_time = time.time()
+    view = False
+    start_loc = 0
+    end_loc = 5
+    correct_selection = ['yes', 'no']
+    try:
+        while not view:
+            select_view = input('\nWould you like to view 5 rows of individual trip data? Enter yes or no\n').lower()
+            if select_view not in correct_selection:
+                print("Sorry your input was not correct. Please input yes or no ")
+            else:
+                view = True
+
+        while view:
+            if select_view == 'no':
+                break
+            elif select_view == 'yes':
+                data_sort = df.sort_values(by=['Start Time'])
+                data_rows = data_sort.iloc[start_loc:end_loc]
+                print(data_rows) # Print 5 rows of data
+                view_display = input('Do you wish to continue?: ').lower()
+                if view_display not in correct_selection:
+                    print("Please input yes or no")
+                    if view_display == 'yes':
+                        continue
+                if view_display == 'yes': # If yes df.iloc adjusts by 5
+                    start_loc += 5
+                    end_loc += 5
+                    continue
+                elif view_display == 'no':
+                    break
+    except Exception as e:
+        print(f"Exception occured at View Raw: {e}")
+
+
+    print("\nThis took %s seconds." % (time.time() - start_time))
+    print('-'*40)
 
 def main():
+    correct_selection = ['yes', 'no']
+    select_restart = True
     while True:
         city, month, day = get_filters()
         df = load_data(city, month, day)
@@ -234,10 +275,20 @@ def main():
         station_stats(df)
         trip_duration_stats(df)
         user_stats(df)
-
-        restart = input('\nWould you like to restart? Enter yes or no.\n')
-        if restart.lower() != 'yes':
+        view_raw(df)
+        
+        while select_restart:
+            restart = input('\nWould you like to restart? Enter yes or no.\n').lower()
+            if restart not in correct_selection:
+                print("Sorry your input was not correct. Please input yes or no ")
+            else:
+                select_restart = False
+        
+        if restart != 'no':
+            continue
+        else:
             break
+
 
 
 if __name__ == "__main__":
